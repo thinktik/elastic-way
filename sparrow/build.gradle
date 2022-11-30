@@ -1,0 +1,153 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.2'
+    id 'io.spring.dependency-management' version '1.0.12.RELEASE'
+    id 'groovy'
+    id 'java'
+    id 'maven-publish'
+}
+
+group = 'cc.omoz'
+version = '0.0.1-SNAPSHOT'
+
+ext {
+    set('springCloudVersion', "2021.0.3")
+    set('springCloudAlibabaVersion', "2021.0.1.0")
+}
+
+dependencies {
+    implementation 'cc.omoz:facade-omoz:1.0'
+    implementation 'cc.omoz:facade-aws:1.0'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config'
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+    implementation 'org.springframework.cloud:spring-cloud-starter'
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.apache.commons:commons-pool2'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.apache.groovy:groovy:4.0.3'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom "com.alibaba.cloud:spring-cloud-alibaba-dependencies:${springCloudAlibabaVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+// -----------------------------------    gradle打包    ----------------------------------------------------------------
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+
+    all {
+        // https://docs.gradle.org/current/dsl/org.gradle.api.artifacts.ResolutionStrategy.html
+        resolutionStrategy.cacheDynamicVersionsFor 10, 'minutes'
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
+// 附带源代码
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+// 编译java
+compileJava {
+    // 源代码兼容版本
+    sourceCompatibility = 17
+    // 字节码兼容版本
+    targetCompatibility = 17
+    // 字符编码
+    options.encoding = 'UTF-8'
+}
+
+// 编译groovy
+compileGroovy {
+    // 源代码兼容版本
+    sourceCompatibility = 17
+    // 字节码兼容版本
+    targetCompatibility = 17
+    // 字符编码
+    options.encoding = 'UTF-8'
+}
+
+// 打包
+jar {
+    // 打包时不附带plain.jar,只打包fatjar
+    // https://stackoverflow.com/questions/67663728/spring-boot-2-5-0-generates-plain-jar-file-can-i-remove-it
+    enabled = false
+    //use empty string
+    archiveClassifier = ''
+}
+
+// -----------------------------------NEXUS 包管理仓库设置----------------------------------------------------------------
+
+// 从Nexus下载依赖
+repositories {
+    // 优先使用本地仓库
+    mavenLocal()
+    // 第二优先使用私有仓库
+    maven {
+        // 用户口令
+        credentials {
+            username '_developer'
+            password 'xxxxoud2018'
+        }
+        // public仓库地址,包含release和snapshots
+        url = "https://www.nexus.xxxxjd.net/repository/maven-public/"
+    }
+    // Spring
+    maven { url 'https://repo.spring.io/release' }
+    // 最后使用私有仓库
+    mavenCentral()
+}
+
+// 发布到Nexus私有库
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            // 包含打包出的jar包
+            from components.java
+            // 包含源代码
+            artifact sourceJar
+        }
+    }
+
+    repositories {
+        maven {
+            // 用户口令
+            credentials {
+                username 'xxxx_developer'
+                password 'xxxxoud2018'
+            }
+            // release仓库地址
+            def releasesRepoUrl = "https://www.nexus.xxxxjd.net/repository/maven-releases/"
+            // snapshots仓库地址
+            def snapshotsRepoUrl = "https://www.nexus.xxxxjd.net/repository/maven-snapshots/"
+            // 根据版本信息动态判断发布到snapshots还是release仓库
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            // 禁用使用非安全协议通信(比如http)
+            allowInsecureProtocol false
+        }
+    }
+}

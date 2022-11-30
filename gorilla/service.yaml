@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gorilla-deployment
+  namespace: omoz-b
+  labels:
+    app: gorilla-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gorilla-app
+  template:
+    metadata:
+      labels:
+        app: gorilla-app
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
+      containers:
+        - name: gorilla
+          image: 843245141269.dkr.ecr.us-east-1.amazonaws.com/gorilla:v0.0.1
+          # https://stackoverflow.com/questions/62800892/kubernetes-hpa-on-aks-is-failing-with-error-missing-request-for-cpu
+          resources:
+            requests:
+              # https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/
+              cpu: "0.5"
+              # https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/
+              memory: "512Mi"
+            limits:
+              cpu: "0.5"
+              memory: "512Mi"
+          ports:
+            - name: http
+              containerPort: 8087
+              hostPort: 8087
+          imagePullPolicy: Always
+      nodeSelector:
+        kubernetes.io/os: linux
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gorilla-service
+  namespace: omoz-b
+  labels:
+    app: gorilla-app
+spec:
+  selector:
+    app: gorilla-app
+  ports:
+    - protocol: TCP
+      port: 8087
+      targetPort: 8087

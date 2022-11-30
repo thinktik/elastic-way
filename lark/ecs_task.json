@@ -1,0 +1,58 @@
+{
+  "family": "lark",
+  "cpu": "512",
+  "memory": "1024",
+  "requiresCompatibilities": [
+    "EC2"
+  ],
+  "runtimePlatform": {
+    "operatingSystemFamily": "LINUX",
+    "cpuArchitecture": "X86_64"
+  },
+  "networkMode": "host",
+  "executionRoleArn": "arn:aws:iam::843245141269:role/PoC_ecs_exec_role",
+  "taskRoleArn": "arn:aws:iam::843245141269:role/PoC_ecs_task_role",
+  "containerDefinitions": [
+    {
+      "name": "lark",
+      "essential": true,
+      "image": "843245141269.dkr.ecr.us-east-1.amazonaws.com/lark:v0.0.1",
+      "cpu": 512,
+      "memory": 1024,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/lark",
+          "awslogs-create-group": "true",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "portMappings": [
+        {
+          "containerPort": 8081,
+          "hostPort": 8081,
+          "protocol": "tcp"
+        }
+      ],
+      "startTimeout": 180,
+      "stopTimeout": 120,
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -s -f http://localhost:8081/ping || exit 1"
+        ],
+        "startPeriod": 180,
+        "interval": 60,
+        "timeout": 8,
+        "retries": 3
+      },
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "us-east-1"
+        }
+      ]
+    }
+  ]
+}

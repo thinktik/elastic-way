@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bee-deployment
+  namespace: omoz
+  labels:
+    app: bee-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bee-app
+  template:
+    metadata:
+      labels:
+        app: bee-app
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
+      containers:
+        - name: viper
+          image: 843245141269.dkr.ecr.us-east-1.amazonaws.com/bee:v0.0.1
+          # https://stackoverflow.com/questions/62800892/kubernetes-hpa-on-aks-is-failing-with-error-missing-request-for-cpu
+          resources:
+            requests:
+              # https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/
+              cpu: "0.5"
+              # https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/
+              memory: "1024Mi"
+            limits:
+              cpu: "0.5"
+              memory: "1024Mi"
+          ports:
+            - name: http
+              containerPort: 8086
+              hostPort: 8086
+          imagePullPolicy: IfNotPresent
+      nodeSelector:
+        kubernetes.io/os: linux
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bee-service
+  namespace: omoz
+  labels:
+    app: bee-app
+spec:
+  selector:
+    app: bee-app
+  ports:
+    - protocol: TCP
+      port: 8086
+      targetPort: 8086

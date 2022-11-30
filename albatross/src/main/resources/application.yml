@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: albatross
+  cloud:
+    discovery:
+      enabled: true
+    gateway:
+      routes:
+        - id: lark
+          uri: lb://lark
+          predicates:
+            - Path=/lark/**
+          filters:
+            - StripPrefix=1
+            - AddResponseHeader=X-Response-TEAM, OMOZ
+            - AddResponseHeader=X-Response-Domain, omoz.cc
+        - id: sparrow
+          uri: lb://sparrow
+          predicates:
+            - Path=/sparrow/**
+          filters:
+            - StripPrefix=1
+            - AddResponseHeader=X-Response-TEAM, OMOZ
+            - AddResponseHeader=X-Response-Domain, omoz.cc
+        - id: eagle
+          uri: lb://eagle
+          predicates:
+            - Path=/eagle/**
+          filters:
+            - StripPrefix=1
+            - AddResponseHeader=X-Response-TEAM, OMOZ
+            - AddResponseHeader=X-Response-Domain, omoz.cc
+        - id: pigeon
+          uri: lb://pigeon
+          predicates:
+            - Path=/pigeon/**
+          filters:
+            - StripPrefix=1
+            - AddResponseHeader=X-Response-TEAM, OMOZ
+            - AddResponseHeader=X-Response-Domain, omoz.cc
+
+server:
+  port: 8080
+
+description: This is ${spring.application.name},Power By Spring/Java
+indexUrl: www.omoz.cc
