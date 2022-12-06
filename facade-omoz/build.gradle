@@ -74,16 +74,6 @@ repositories {
             password codeartifactToken
         }
     }
-//    // 第三优先使用优先使用Nexus私有仓库
-//    maven {
-//        // 用户口令
-//        credentials {
-//            username 'xxx_username'
-//            password 'xxx_passwd'
-//        }
-//        // public仓库地址,包含release和snapshots
-//        url = "https://www.nexus.xxx.net/repository/maven-public/"
-//    }
     // 最后使用maven中央仓库和Spring仓库
     mavenCentral()
     maven { url 'https://repo.spring.io/release' }
@@ -121,21 +111,5 @@ publishing {
             // 禁用使用非安全协议通信(比如http)
             allowInsecureProtocol false
         }
-
-//        maven {
-//            // 用户口令
-//            credentials {
-//                username 'xxx_username'
-//                password 'xxx_passwd'
-//            }
-//            // release仓库地址
-//            def releasesRepoUrl = "https://www.nexus.xxx.net/repository/maven-releases/"
-//            // snapshots仓库地址
-//            def snapshotsRepoUrl = "https://www.nexus.xxx.net/repository/maven-snapshots/"
-//            // 根据版本信息动态判断发布到snapshots还是release仓库
-//            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-//            // 禁用使用非安全协议通信(比如http)
-//            allowInsecureProtocol false
-//        }
     }
 }
