@@ -86,7 +86,7 @@ publishing {
             pom {
                 name = rootProject.name
                 description = 'omoz.cc基础组件 有关omoz.cc自定义的规范、约束和工具类;作为其他Java服务的基础组件.'
-                url = 'https://github.com/thinktik/elastic-way/facade-omoz'
+                url = 'https://github.com/thinktik/elastic-way/facade-aws'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
