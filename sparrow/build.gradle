@@ -1,0 +1,151 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'org.springframework.boot' version '3.0.1'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'maven-publish'
+}
+
+group = 'cc.omoz'
+version = '0.0.1-SNAPSHOT'
+
+ext {
+    set('springCloudVersion', "2022.0.0")
+    set('springCloudAlibabaVersion', "2022.0.0.0-RC1")
+}
+
+dependencies {
+    implementation 'cc.omoz:facade-omoz:1.0-SNAPSHOT'
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config'
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+    implementation 'org.springframework.cloud:spring-cloud-starter'
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.apache.groovy:groovy'
+
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom "com.alibaba.cloud:spring-cloud-alibaba-dependencies:${springCloudAlibabaVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+
+// -----------------------------------    gradle打包    ----------------------------------------------------------------
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+
+    configureEach {
+        // https://docs.gradle.org/current/dsl/org.gradle.api.artifacts.ResolutionStrategy.html
+        resolutionStrategy.cacheDynamicVersionsFor 10, 'minutes'
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
+// 附带源代码
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+// 编译
+compileJava {
+    // 源代码兼容版本
+    sourceCompatibility = 17
+    // 字节码兼容版本
+    targetCompatibility = 17
+    // 字符编码
+    options.encoding = 'UTF-8'
+}
+
+// 编译groovy
+compileGroovy {
+    // 源代码兼容版本
+    sourceCompatibility = 17
+    // 字节码兼容版本
+    targetCompatibility = 17
+    // 字符编码
+    options.encoding = 'UTF-8'
+}
+
+// 打包
+jar {
+    // 打包时不附带plain.jar,只打包fatjar
+    // https://stackoverflow.com/questions/67663728/spring-boot-2-5-0-generates-plain-jar-file-can-i-remove-it
+    enabled = true
+    //use empty string
+    archiveClassifier = ''
+}
+
+// -----------------------------------Maven(AWS CodeArtifact)包管理仓库设置----------------------------------------------------------------
+
+// 从AWS CodeArtifact下载依赖
+def codeartifactToken = "aws codeartifact get-authorization-token --domain omoz --domain-owner 843245141269 --query authorizationToken --output text --profile default".execute().text
+repositories {
+    // 优先使用本地仓库
+    mavenLocal()
+    // 第二优先使用优先使用AWS CodeArtifact私有仓库
+    maven {
+        url 'https://omoz-843245141269.d.codeartifact.us-east-1.amazonaws.com/maven/omoz-mvn/'
+        credentials {
+            username "aws"
+            password codeartifactToken
+        }
+    }
+    // 最后使用maven中央仓库和Spring仓库
+    mavenCentral()
+    maven { url 'https://repo.spring.io/release' }
+}
+
+// 发布到AWS CodeArtifact私有库
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            // 包含打包出的jar包
+            from components.java
+            // 包含源代码
+            artifact sourceJar
+            pom {
+                name = rootProject.name
+                description = 'omoz.cc基础组件 有关omoz.cc自定义的规范、约束和工具类;作为其他Java服务的基础组件.'
+                url = 'https://github.com/thinktik/elastic-way/facade-aws'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url 'https://omoz-843245141269.d.codeartifact.us-east-1.amazonaws.com/maven/omoz-mvn/'
+            credentials {
+                username "aws"
+                password codeartifactToken
+            }
+            // 禁用使用非安全协议通信(比如http)
+            allowInsecureProtocol false
+        }
+    }
+}
