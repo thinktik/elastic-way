@@ -22,7 +22,7 @@ LABEL "SERVICE_PATH"="${APP_NAME}"
 RUN apt update -y && apt install -y curl && rm -rf /var/lib/apt/lists/*
 
 # 创建服务器的工作目录 & 创建服务器的日志目录
-RUN mkdir -p ${HOME_PATH} && mkdir -p /ext_files/logs
+RUN mkdir -p ${HOME_PATH} && mkdir -p ${HOME_PATH}/logs
 
 # 将当前项目的可执行文件添加到工作目录
 # https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#add-or-copy
