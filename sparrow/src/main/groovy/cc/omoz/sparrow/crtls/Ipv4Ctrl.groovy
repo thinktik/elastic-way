@@ -28,7 +28,6 @@ class Ipv4Ctrl {
      * @return ipv4所在的地理位置的详细信息
      */
     @GetMapping(value = "/{ipv4}")
-
     OmozResponse<Map<String, Ipv4AddressGeo>> ipv4(@PathVariable("ipv4") String ipv4) {
         OmozResponse<Map<String, Ipv4AddressGeo>> response = new HttpResponse<>()
         response.setCode(200)

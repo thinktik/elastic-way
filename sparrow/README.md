@@ -11,6 +11,12 @@ sparrow：麻雀
 
 - [X] 根据ip查询ip所在的地理位置(依赖[ip2location](https://www.ip2location.com/))
 - [ ] IP地址CIDR计算器
+- [ ] UUID生成器
+- [ ] BASE64 加解密
+- [ ] 校验器(hash,AES)
+- [ ] 二维码生成器/解析器
+- [ ] 电话号码归属地查询
+- [ ] 短网址
 - [ ] 天气查询
 
 # Arch
@@ -21,8 +27,6 @@ sparrow：麻雀
 |--------|----------------------------------------------------------------|
 | Java   | [JDK 17.x](https://www.oracle.com/java/technologies/downloads) |
 | Groovy | [4.x +](https://groovy.apache.org/download.html)               |
-
-![服务集成地图](../doc/sparrow_arch.svg)
 
 # Reference
 
